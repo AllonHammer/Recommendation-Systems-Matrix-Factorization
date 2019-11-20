@@ -1,7 +1,4 @@
 venv*
-.idea
-*.csv
 *.pdf
 *.txt
-resources/
-v
+

@@ -1,24 +1,30 @@
 import pandas as pd
 from data_preprocess.preprocess_utils import *
 import numpy as np
+from os.path import dirname, abspath, join
 
 class DataSet():
     """ A class used to represent a dataset"""
     def __init__(self):
-        # Read data
-        self.train = pd.read_csv('../resources/Train.csv')#.sample(frac=0.001)
-        self.validation = pd.read_csv('../resources/Validation.csv')#.sample(frac=0.001)
-        self.test = pd.read_csv('../resources/Test.csv')
-        # Get mapping for users and items from train set
+        #
+        parent_path= dirname(dirname(abspath(__file__)))
+
+        self.train = pd.read_csv(join(parent_path,'resources/Train.csv'))
+        self.validation = pd.read_csv(join(parent_path,'resources/Validation.csv'))
+        self.test = pd.read_csv(join(parent_path,'resources/Test.csv'))
+        # Get user-index, index-user, item-index, index-item mappings  from train set
         self.user_to_index, self.index_to_user=self.create_mapping(self.train.User_ID_Alias.unique())
         self.item_to_index, self.index_to_item=self.create_mapping(self.train.Movie_ID_Alias.unique())
+        # Get user-items and item-users mapping
+        self.user_items=self.create_user_items_mapping()
+        self.item_users=self.create_item_users_mapping()
         # Create rating matrix
         self.R_train, self.R_validation=self.create_rating_matrix()
 
 
 
     def create_mapping(self, lst):
-        """ Create mapping between users/items and thier indexes
+        """ Create mapping between users/items and their indexes
             :param lst: list of values to map
             :return:    dict <item:index>
             :return:    dict <index:item>"""
@@ -26,6 +32,29 @@ class DataSet():
         item_to_index = {v: k for k,v in enumerate(lst)}
         index_to_item = {v: k for k, v in item_to_index.items()}
         return item_to_index, index_to_item
+
+    def create_user_items_mapping(self):
+        """ Creates a mapping <key: user_index, value: relevant items, 2d array [item_index, rating]>
+
+            :return:    dict <item:index>"""
+
+        train=convert_to_mappings(self.train.copy(), self.user_to_index, self.item_to_index)
+        d={}
+        for user in self.index_to_user.keys():
+          d[user]=(train[train.User_ID_Alias==user][['Movie_ID_Alias', 'Ratings_Rating']]).values
+        return d
+
+    def create_item_users_mapping(self):
+        """ Creates a mapping  <key: item_index, value: relevant users, 2d array [user_index, rating]>
+
+            :return:    dict """
+
+        train=convert_to_mappings(self.train.copy(), self.user_to_index, self.item_to_index)
+        d={}
+        for item in self.index_to_item.keys():
+            d[item]=(train[train.Movie_ID_Alias==item][['User_ID_Alias', 'Ratings_Rating']]).values
+        return d
+
 
     def create_rating_matrix(self):
         """ Create rating matrix on training set
@@ -72,6 +101,10 @@ class DataSet():
         print(set_diff(self.test.User_ID_Alias, self.train.User_ID_Alias))
         print('Users from Validation set that do not appear in Train set')
         print(set_diff(self.validation.User_ID_Alias, self.train.User_ID_Alias))
+
+
+
+
 
 
 

@@ -14,8 +14,8 @@ def init_variables(d,m,n):
 
         :"""
 
-    u = np.random.normal(0, 1 / np.sqrt(d), (m, d))
-    v = np.random.normal(0, 1 / np.sqrt(d), (n, d))
+    u =  np.random.normal(0, 0.1, (m, d))
+    v =  np.random.normal(0, 0.1, (n, d)) #1 / np.sqrt(d)
     bm = np.random.normal(0, 0.1, (m, 1))
     bn = np.random.normal(0, 0.1, (n, 1))
     return u,v,bm,bn

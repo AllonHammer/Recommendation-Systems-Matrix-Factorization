@@ -1,4 +1,7 @@
 venv*
+.idea
+*.csv
 *.pdf
 *.txt
-
+resources/
+*.pyc

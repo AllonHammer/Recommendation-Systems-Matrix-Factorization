@@ -67,7 +67,7 @@ if __name__ == '__main__':
         print('Starting Hyper Param Tuning')
 
         tuning_results=model.tune(iterations=100, early_stop=10, tuning_dict=config.tuning_dict)
-        model=Model(latent_dim=tuning_results.d, user_items=data_set.user_items, item_users=data_set.item_users, ranking_matrix_train=r_train, ranking_matrix_validation=r_valid, l_users=tuning_results.lu, l_items=tuning_results.li, l_bias_users=tuning_results.lbu,  l_bias_items=tuning_results.lbi)
+        model=Model(latent_dim=tuning_results['d'], user_items=data_set.user_items, item_users=data_set.item_users, ranking_matrix_train=r_train, ranking_matrix_validation=r_valid, l_users=tuning_results['lu'], l_items=tuning_results['li'], l_bias_users=tuning_results['lbu'],  l_bias_items=tuning_results['lbi'])
 
     # Train model
     model.train_model(iters, early_stop)

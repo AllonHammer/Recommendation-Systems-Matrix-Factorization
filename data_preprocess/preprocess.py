@@ -20,6 +20,9 @@ class DataSet():
         self.item_users=self.create_item_users_mapping()
         # Create rating matrix
         self.R_train, self.R_validation=self.create_rating_matrix()
+        # For SGD we hold the whole dataset as numpy for better performance
+        self.D_arr_train=self.train.to_numpy()
+        self.D_arr_validate=self.validation.to_numpy()
 
 
 

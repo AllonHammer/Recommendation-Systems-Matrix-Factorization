@@ -2,7 +2,7 @@ import sys
 import os
 import time
 import argparse
-
+import json
 
 def args_parsing():
 
@@ -71,8 +71,11 @@ if __name__ == '__main__':
             # Tune hyperparams
             print('Starting Hyper Param Tuning')
 
-            tuning_results=model.tune(iterations=100, early_stop=10, tuning_dict=config.tuning_dict)
-            model=Model(latent_dim=tuning_results['d'], user_items=data_set.user_items, item_users=data_set.item_users, ranking_matrix_train=r_train, ranking_matrix_validation=r_valid, l_users=tuning_results['lu'], l_items=tuning_results['li'], l_bias_users=tuning_results['lbu'],  l_bias_items=tuning_results['lbi'])
+            tuning_results=model.hyperparmas_tune(max_evals=1000)
+            with open('resources/best_configs.json', 'w') as fp:
+                json.dump(tuning_results, fp)
+            print('best results are ', tuning_results)
+            model=Model(latent_dim=int(tuning_results['d']), user_items=data_set.user_items, item_users=data_set.item_users, ranking_matrix_train=r_train, ranking_matrix_validation=r_valid, l_users=tuning_results['lu'], l_items=tuning_results['li'], l_bias_users=tuning_results['lbu'],  l_bias_items=tuning_results['lbi'])
 
         # Train model
         model.train_model(iters, early_stop)

@@ -1,5 +1,6 @@
 from ALS.als_utils import *
 import numpy as np
+from hyperopt import hp, fmin, tpe,  Trials
 
 
 
@@ -38,7 +39,7 @@ class Model():
 
 
 
-    def train_model(self, iterations, early_stop=10):
+    def train_model(self, iterations, early_stop=10, verbose=True):
         """Alternate updates  of U,  Bu, and then  V, Bi. This is done iteratively or until early stopping.
 
             :param train: pd.DataFrame of training data as retrieved from DataSet()
@@ -54,7 +55,7 @@ class Model():
         best_rmse= 999
 
         for iter in range(iterations):
-            print('Starting iteration {} out of {}'.format(iter+1,iterations))
+            if verbose: print('Starting iteration {} out of {}'.format(iter+1,iterations))
             for user in self.user_items:
                 #print('Updating Um, Bm for user {} out of {}'.format(user+1, self.m))
                 self.U[user]  = update_Um(user, self.user_items[user], self.V,  self.Bu, self.Bi, self.lu, self.mu)
@@ -68,8 +69,8 @@ class Model():
             r2_score_train, mae_train, rmse_train= self.evaluate(is_train=True)
             r2_score_valid, mae_valid, rmse_valid= self.evaluate(is_train=False)
 
-            print('Train set : R2 {}       MAE {}      RMSE {}'.format(r2_score_train, mae_train, rmse_train))
-            print('Validation set : R2 {}       MAE {}      RMSE {}'.format(r2_score_valid, mae_valid, rmse_valid))
+            if verbose: print('Train set : R2 {}       MAE {}      RMSE {}'.format(r2_score_train, mae_train, rmse_train))
+            if verbose: print('Validation set : R2 {}       MAE {}      RMSE {}'.format(r2_score_valid, mae_valid, rmse_valid))
 
             cnt+=1
             if rmse_valid<best_rmse:
@@ -135,37 +136,43 @@ class Model():
             pred=np.dot(self.U[user, :].T, self.V[item, :])+self.Bu[user]+self.Bi[item]+self.mu
             return float(np.clip(pred, 1,5))
 
-
-    def tune(self, iterations, early_stop, tuning_dict):
-        """Performs iterative tuning for hyperparams. For simplicity
-           we tune  each hyperparam separately instead of all possible combinations.
-
-                    :param iterations: int number of iterations in ALS
-                    :param early_stop: int number of consecutive epochs that the validation score has not improved
-                    :param tuning_dict: dict <key: hyperparam, value: [value 1, value 2 ... ]>
+    def hyperparmas_tune(self, max_evals=100):
+        """Tunes hyperparams in bayesian optimization:
 
 
+         :param max_evals: int number of iterations of bayesian optimization
+         :return dict <key: hyperparam, value: best value>
 
-                    :return  dict of best values  <key: hyperparam, value: best value> """
+        """
+
+        params = {
+            'd': hp.quniform('d', 5,50,1),
+            'lu': hp.loguniform('lu', -1,4.5),
+            'li': hp.loguniform('li', -3, 3),
+            'lbu': hp.loguniform('lbu', -1, 4),
+            'lbi': hp.loguniform('lbi', -3, 3)
+
+        }
+
+        trials = Trials()
+        best = fmin(fn=self.objective, space=params, algo=tpe.suggest, max_evals=max_evals, trials=trials)
+        return best
 
 
-        best_values={}
+    def objective(self, params):
+        """ helper function for hyperparams_tune
+            :param dict <key: hyperparam, value: value to check>
+            :return float"""
 
-        for key in tuning_dict.keys():
-            assert key in ['d', 'lu', 'li', 'lbu', 'lbi'], "key must be in  ['d', 'lu', 'li', 'lbu', 'lbi']"
-            print('Tuning hyperparam {}'.format (key))
-            best_rmse = 999
-            best_value=0
-            for val in tuning_dict[key]:
-                print('Check value {}'.format(val))
-                exec("self.{}={}".format(key,val)) #Set hyperparam according to what appears in the dict
-                rmse=self.train_model(iterations, early_stop)
-                if rmse<best_rmse:
-                    best_rmse=rmse
-                    best_value=val
-            best_values[key]=best_value
-            exec("self.{}={}".format(key, best_value)) # Set hyperparam to best value found
-        return best_values
+        for key in params.keys():
+            exec("self.{}={}".format(key, params[key]))
+        print(' Set Hyperparams to d:{} lu: {} li:{} lbu:{} lbi:{}'.format(self.d,self.lu,self.li,self.lbu,self.lbi))
+        rmse = self.train_model(iterations=100, early_stop=10, verbose=False)
+        print('rmse validation set: {}'.format(rmse))
+        return rmse
+
+
+
 
 
 

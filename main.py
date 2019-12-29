@@ -38,7 +38,7 @@ if __name__ == '__main__':
         if args.load:
             print('Loading pretraind DataSet()')
 
-            path_to_prepared_data=os.path.join(main_path,'resources/prepared_data.pkl')
+            path_to_prepared_data = os.path.join(main_path,'resources/prepared_data.pkl')
             data_set=load_data_set(path_to_prepared_data)
         else:
             data_set = DataSet()
@@ -113,13 +113,13 @@ if __name__ == '__main__':
         hyparams['mu'] = dataset.train.mean().Ratings_Rating
         # convert item and user to indexes in train and validation set
         sgd_utils.data_to_index(dataset)
-        b_m, b_n = sgd_utils.get_biased_params(dataset, hyparams['mean'], hyparams['sigma'], hyparams['mu'])
+        b_m, b_n = sgd_utils.get_biased_params(hyparams, dataset, hyparams['mean'], hyparams['sigma'], hyparams['mu'])
         if args.tune:
             res = sgd_utils.train_sgd(dataset, hyparams, b_m, b_n, True)
         else:
             res = sgd_utils.train_sgd(dataset, hyparams, b_m, b_n, False)
 
-        sgd_utils.predict_test(dataset, res, path="resources/'A_037098985_201641164_205766496.csv")
+        sgd_utils.predict_test(dataset, res, path="resources/A_037098985_201641164_205766496.csv")
         end = time.time()
 
         print('Wall time is {}'.format(end-start))

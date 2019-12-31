@@ -71,7 +71,7 @@ $ pip install -r requirements.txt
 To execute the code please run the main.py file.
 There are 3 arguments to pass:
 1. --model (required)  sgd/als
-2. --load (optional) to use pre-trained data 
+2. --load (optional) to use pre-trained data, this will not work on the first run (after the first run the dataset is saved to local fs)
 3. --tune (optional) to conduct hyper-param optimization (might take some time)
 
 
